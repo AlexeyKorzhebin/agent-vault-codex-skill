@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Vault"
+  short_description: "Work safely with a server-side Obsidian agent vault"
+  default_prompt: "Use $agent-vault to read, search, create, or web-clip notes in the configured server-side Obsidian agent vault."
