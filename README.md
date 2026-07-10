@@ -26,3 +26,8 @@ Install the bundled binary on the server:
 
 Then ask Codex to use `$agent-vault` for reading, searching, writing tasks, or
 saving Markdown web clips with local attachments.
+
+For web clips with image metadata, use the unambiguous
+`URL|filename|label` form so signed and resized URLs keep their query
+parameters intact. Image downloads are limited to public HTTP(S) destinations
+and 10 MiB per image.
