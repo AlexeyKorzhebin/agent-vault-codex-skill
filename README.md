@@ -35,3 +35,21 @@ and 10 MiB per image.
 The bundled binary is built and tested on Linux amd64 from the
 `ObsidianSyncRules/agent-vault-cli` source. Its SHA256 is published next to the
 binary and is verified by the installer before deployment.
+
+## Hermes Agent
+
+Клонировать репозиторий в независимый каталог, установить вложенный бинарный файл
+и подключить skill к нужному профилю Hermes символической ссылкой:
+
+```bash
+git clone https://github.com/AlexeyKorzhebin/agent-vault-codex-skill \
+  ~/.local/share/agent-vault-skill
+~/.local/share/agent-vault-skill/scripts/install-agent-vault.sh --local
+mkdir -p ~/.hermes/profiles/assistant/skills/productivity
+ln -s ~/.local/share/agent-vault-skill \
+  ~/.hermes/profiles/assistant/skills/productivity/agent-vault
+```
+
+Задать `AGENT_VAULT_ROOT` в окружении профиля `assistant`, запустить
+`scripts/bootstrap-vault.sh`, начать новую сессию Hermes и проверить skill командой
+`hermes -p assistant skills list`.

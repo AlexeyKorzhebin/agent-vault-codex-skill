@@ -1,104 +1,76 @@
 ---
 name: agent-vault
-description: Use when the user asks to read, search, create, append, task, or web-clip notes in a server-side Obsidian agent vault, agent repository, agent memory, synced agent materials, or `/srv/obsidian-vaults/agent-memory`.
+description: Чтение, поиск и сохранение долговечных материалов и задач в серверном агентском Obsidian vault.
+metadata:
+  version: 1.1.0
+  hermes:
+    tags: [obsidian, productivity, memory]
+    category: productivity
 ---
 
-# Agent Vault
+# Агентский vault
 
-Use the server CLI for a plaintext Obsidian agent vault. Prefer it over direct
-CouchDB edits or ad hoc file writes. Do not assume a specific server or vault
-path.
+Используйте `agent-vault` вместо прямого изменения CouchDB или файлов vault.
 
-Required configuration:
+Обязательное окружение:
 
 ```bash
-export AGENT_VAULT_HOST=<ssh-host>
-export AGENT_VAULT_ROOT=<absolute-vault-root-on-server>
+export AGENT_VAULT_ROOT=/absolute/path/to/the/vault
 ```
 
-Optional binary path on the server:
+Локальный запуск, когда агент работает на сервере с vault:
 
 ```bash
-export AGENT_VAULT_BIN=${AGENT_VAULT_BIN:-~/.local/bin/agent-vault}
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" list
 ```
 
-If the binary is missing on the server, install the bundled Linux amd64 build:
+Удалённый запуск используется только при явно заданном `AGENT_VAULT_HOST`:
 
 ```bash
-~/.codex/skills/agent-vault/scripts/install-agent-vault.sh "$AGENT_VAULT_HOST"
+ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-agent-vault} list"
 ```
 
-Check the remote CLI:
+Никогда не предполагайте имя сервера или корень vault. Перед созданием проектов,
+областей, контактов, встреч, идей и источников прочитайте
+`references/vault-conventions.md`.
+
+## Основные команды
 
 ```bash
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} help"
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" list
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" read "relative/path.md"
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" search "query"
+printf '%s\n' '# Title' '' 'Body' | ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" write "relative/path.md"
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" task "relative/path.md" "Task text"
 ```
 
-Do not touch private vaults, secret vaults, or CouchDB directly unless the user
-explicitly asks for low-level debugging.
+После каждой записи прочитайте тот же путь. Используйте `write --overwrite` только
+после подтверждения пользователем замены существующей заметки.
 
-## Common Commands
+## Веб-клипы
 
-List files:
+Сохраняйте веб-страницы как Markdown с адресом источника во frontmatter и
+локальными изображениями:
 
 ```bash
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} list"
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} list web-clips"
+printf '%s\n' '## Summary' '' '- Key point.' | \
+  ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" webclip \
+    --title "Article title" \
+    --source "https://example.com/article" \
+    --tags "web-clip,agents" \
+    --image "https://example.com/diagram.png?w=1200|diagram.png|Diagram" \
+    "40 Ресурсы/Источники/Статьи/example/article.md"
 ```
 
-Read a note:
+Используйте формат `URL|filename|label`; имена файлов должны быть уникальными. Не
+сохраняйте HTML как основной материал.
 
-```bash
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} read 'web-clips/example/note.md'"
-```
+## Безопасность
 
-Search:
-
-```bash
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} search 'query text'"
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} search 'query text' Projects"
-```
-
-Create or replace a note:
-
-```bash
-printf '%s\n' '# Title' '' 'Body' \
-  | ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} write --overwrite 'Projects/example.md'"
-```
-
-Append to a note:
-
-```bash
-printf '%s\n' 'New paragraph.' \
-  | ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} append 'Projects/example.md'"
-```
-
-Add a task:
-
-```bash
-ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} task 'Tasks/inbox.md' 'Follow up on server sync'"
-```
-
-Create a web clip with local attachments:
-
-```bash
-printf '%s\n' '## Summary' '' '- Key point.' \
-  | ssh "$AGENT_VAULT_HOST" "AGENT_VAULT_ROOT='$AGENT_VAULT_ROOT' ${AGENT_VAULT_BIN:-~/.local/bin/agent-vault} webclip --title 'Article title' --source 'https://example.com' --tags 'web-clip,agents' --image 'https://example.com/diagram.png?w=1200|diagram.png|Diagram' 'web-clips/example/article.md'"
-```
-
-Use `URL|filename|label` for every explicit image name or label. This keeps `=`
-inside URL query parameters intact. Give each image a unique filename.
-
-`webclip` writes a Markdown note and downloads images into an adjacent
-`attachments/` folder. It accepts only public HTTP(S) image destinations,
-revalidates redirects, limits each image to 10 MiB, and publishes the complete
-clip only after all downloads succeed. Obsidian clients sync and render the
-relative image links.
-
-## Safety Rules
-
-- Keep paths relative to the vault root.
-- Never use absolute paths, `..`, `.obsidian`, `.git`, or `_conflicts`.
-- Never route webclip downloads to loopback, private, or link-local addresses.
-- Treat web pages as Markdown clips plus local attachments, not `.html` files.
-- After important writes, verify sync with `agent-vault read`, `agent-vault list`, and, when needed, by checking the local Obsidian vault.
+- Все пути должны быть относительными к `AGENT_VAULT_ROOT`.
+- Не используйте абсолютные пути заметок, `..`, `.obsidian`, `.git` и `_conflicts`.
+- Не обращайтесь к личным или секретным vault.
+- Не сохраняйте пароли, API-ключи, токены, приватные ключи и содержимое `.env`.
+- Не загружайте изображения веб-клипов с loopback, частных или link-local адресов.
+- Запрашивайте подтверждение перед удалением, массовым перемещением, внешней
+  отправкой, финансовыми операциями и изменениями инфраструктуры вне утверждённого плана.
