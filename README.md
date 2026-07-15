@@ -31,3 +31,7 @@ For web clips with image metadata, use the unambiguous
 `URL|filename|label` form so signed and resized URLs keep their query
 parameters intact. Image downloads are limited to public HTTP(S) destinations
 and 10 MiB per image.
+
+The bundled binary is built and tested on Linux amd64 from the
+`ObsidianSyncRules/agent-vault-cli` source. Its SHA256 is published next to the
+binary and is verified by the installer before deployment.
