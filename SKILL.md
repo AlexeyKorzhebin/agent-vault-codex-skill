@@ -2,7 +2,7 @@
 name: agent-vault
 description: Чтение, поиск и сохранение долговечных материалов и задач в серверном агентском Obsidian vault.
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   hermes:
     tags: [obsidian, productivity, memory]
     category: productivity
@@ -84,12 +84,16 @@ printf '%s\n' '## Summary' '' '- Key point.' | \
 ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" webclip \
   --raw-note --no-replace \
   --image "https://example.com/diagram.png|diagram.png|Схема" \
+  --local-attachment "/tmp/google-export/table.png|table.png" \
   "40 Ресурсы/Источники/Статьи/example/Статья.md" < complete-note.md
 ```
 
 Для raw web clip каждая заметка должна находиться в новой отдельной папке
 источника. Команда либо публикует заметку со всеми картинками, либо не публикует
-ничего.
+ничего. Локальные вложения разрешены только в raw-режиме, должны быть обычными
+непустыми файлами не более 50 MiB и передаются повторяемым аргументом
+`SOURCE_PATH|filename`. Не используйте этот аргумент для чтения секретов,
+OAuth-файлов, `.env` или содержимого приватных vault.
 
 ## Безопасность
 
