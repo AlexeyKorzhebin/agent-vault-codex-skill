@@ -2,7 +2,7 @@
 name: agent-vault
 description: Чтение, поиск и сохранение долговечных материалов и задач в серверном агентском Obsidian vault.
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   hermes:
     tags: [obsidian, productivity, memory]
     category: productivity
@@ -42,10 +42,22 @@ ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" read "relative/path.m
 ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" search "query"
 printf '%s\n' '# Title' '' 'Body' | ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" write "relative/path.md"
 ${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" task "relative/path.md" "Task text"
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" attach "relative/path.md" "document.pdf" < document.pdf
 ```
 
 После каждой записи прочитайте тот же путь. Используйте `write --overwrite` только
 после подтверждения пользователем замены существующей заметки.
+
+Для служебного обновления существующей заметки и безопасного удаления сначала
+прочитайте файл, вычислите SHA-256 точных байтов и передайте ожидаемый хеш:
+
+```bash
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" write --if-sha256 "$EXPECTED_SHA256" "relative/path.md" < updated.md
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" remove --if-sha256 "$EXPECTED_SHA256" "relative/path.md"
+```
+
+Не повторяйте CAS-команду автоматически после несовпадения хеша: перечитайте
+заметку и сохраните пользовательские изменения.
 
 ## Веб-клипы
 
@@ -65,6 +77,20 @@ printf '%s\n' '## Summary' '' '- Key point.' | \
 Используйте формат `URL|filename|label`; имена файлов должны быть уникальными. Не
 сохраняйте HTML как основной материал.
 
+Когда полный Markdown и frontmatter уже подготовлены другим проверенным skill,
+публикуйте новый источник одним bundle без замены существующей папки:
+
+```bash
+${AGENT_VAULT_BIN:-agent-vault} --root "$AGENT_VAULT_ROOT" webclip \
+  --raw-note --no-replace \
+  --image "https://example.com/diagram.png|diagram.png|Схема" \
+  "40 Ресурсы/Источники/Статьи/example/Статья.md" < complete-note.md
+```
+
+Для raw web clip каждая заметка должна находиться в новой отдельной папке
+источника. Команда либо публикует заметку со всеми картинками, либо не публикует
+ничего.
+
 ## Безопасность
 
 - Все пути должны быть относительными к `AGENT_VAULT_ROOT`.
@@ -72,5 +98,6 @@ printf '%s\n' '## Summary' '' '- Key point.' | \
 - Не обращайтесь к личным или секретным vault.
 - Не сохраняйте пароли, API-ключи, токены, приватные ключи и содержимое `.env`.
 - Не загружайте изображения веб-клипов с loopback, частных или link-local адресов.
+- Не удаляйте файл без явного подтверждения пользователя и актуального SHA-256.
 - Запрашивайте подтверждение перед удалением, массовым перемещением, внешней
   отправкой, финансовыми операциями и изменениями инфраструктуры вне утверждённого плана.

@@ -24,13 +24,19 @@ Install the bundled binary on the server:
 ~/.codex/skills/agent-vault/scripts/install-agent-vault.sh "$AGENT_VAULT_HOST"
 ```
 
-Then ask Codex to use `$agent-vault` for reading, searching, writing tasks, or
-saving Markdown web clips with local attachments.
+Then ask Codex to use `$agent-vault` for reading, searching, writing tasks,
+attaching files, conditional updates/removals, or saving Markdown web clips with
+local attachments.
 
 For web clips with image metadata, use the unambiguous
 `URL|filename|label` form so signed and resized URLs keep their query
 parameters intact. Image downloads are limited to public HTTP(S) destinations
 and 10 MiB per image.
+
+The CLI also supports atomic raw web-clip bundles, 50 MiB adjacent attachments,
+and SHA-256 compare-and-swap operations. These operations coordinate with the
+LiveSync bridge through a vault-root advisory lock; direct unmanaged writes are
+outside that guarantee.
 
 The bundled binary is built and tested on Linux amd64 from the
 `ObsidianSyncRules/agent-vault-cli` source. Its SHA256 is published next to the
